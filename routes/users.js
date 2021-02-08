@@ -80,7 +80,7 @@ router.route('/profile/:userId')
     .catch((err) => next(err));
 });
 
-router.post('/signup',cors.corsWithOptions, (req, res, next) => {
+router.post('/signup', (req, res, next) => {
   User.register(new User({username: req.body.username}), 
     req.body.password, (err, user) => {
     if(err) {
@@ -103,6 +103,17 @@ router.post('/signup',cors.corsWithOptions, (req, res, next) => {
 
         passport.authenticate('local')(req, res, () => {
           res.statusCode = 200;
+          res.setHeader('Access-Control-Allow-Origin', '*');
+
+          // Request methods you wish to allow
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+      
+          // Request headers you wish to allow
+          res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,content-type');
+      
+          // Set to true if you need the website to include cookies in the requests sent
+          // to the API (e.g. in case you use sessions)
+          res.setHeader('Access-Control-Allow-Credentials', true);
           res.setHeader('Content-Type', 'application/json');
           res.json({success: true,status: 'Registration Successful!'});
         });
