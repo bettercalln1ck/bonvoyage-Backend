@@ -4,17 +4,20 @@ var Schema=mongoose.Schema;
 var passportLocalMongoose=require('passport-local-mongoose');
 
 var User=new Schema({
-	firstname:{
+	firstName:{
 		type:String,
-		default:''
+		default:'',
+		required: true
 	},
-	lastname:{
+	lastName:{
 		type:String,
-		default:''
+		default:'',
+		required: true
 	},
-	admin:{
-		type:Boolean,
-		default:false
+	email:{
+		type:String,
+		default:'',
+		required: true
 	}
     },
     {

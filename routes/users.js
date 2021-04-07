@@ -91,6 +91,8 @@ router.post('/signup',(req, res, next) => {
     else {
       if (req.body.firstname)
         user.firstname = req.body.firstname;
+      if (req.body.email)
+        user.email = req.body.email;
       if (req.body.lastname)
         user.lastname = req.body.lastname;
       user.save((err, user) => {
@@ -103,17 +105,6 @@ router.post('/signup',(req, res, next) => {
 
         passport.authenticate('local')(req, res, () => {
           res.statusCode = 200;
- /*         res.setHeader('Access-Control-Allow-Origin', '*');
-
-          // Request methods you wish to allow
-          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      
-          // Request headers you wish to allow
-          res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,content-type');
-      
-          // Set to true if you need the website to include cookies in the requests sent
-          // to the API (e.g. in case you use sessions)
-          res.setHeader('Access-Control-Allow-Credentials', true);*/
           res.setHeader('Content-Type', 'application/json');
           res.json({success: true,status: 'Registration Successful!'});
         });
@@ -122,24 +113,13 @@ router.post('/signup',(req, res, next) => {
   });
 });
 
-router.post('/login',passport.authenticate('local'),(req,res,next) =>{
+router.post('/login',(req,res,next) =>{
+      passport.authenticate('local')(req,res,() =>{
 			var token=authenticate.getToken({_id:req.user._id});
 			res.statusCode=200;		
-     /* res.setHeader('Access-Control-Allow-Origin', '*');
-
-          // Request methods you wish to allow
-          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-      
-          // Request headers you wish to allow
-          res.setHeader('Access-Control-Allow-Headers', 'Origin,X-Requested-With,content-type');
-      
-          // Set to true if you need the website to include cookies in the requests sent
-          // to the API (e.g. in case you use sessions)
-          res.setHeader('Access-Control-Allow-Credentials', true);
-          res.setHeader('Content-Type', 'application/json');*/
 			res.setHeader('Content-Type','application/json');
 			res.json({success: true,userId:req.user._id,token:token,status:'You are successfully login!'});
-
+    });
 });
 
 
