@@ -10,7 +10,7 @@ const axios = require('axios');
 
 placesRouter.route('/')
 .get(authenticate.verifyUser,(req, res, next)=> {
-  src = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+Sydney&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+  src = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+Sydney&key=key"
 axios.get(src)
   .then(response => {
     console.log(response.data);
