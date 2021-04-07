@@ -1,0 +1,11 @@
+--2021-04-07 17:34:58--  https://maps.googleapis.com/maps/api/place/textsearch/xml?query=restaurants+in+Sydney
+Resolving maps.googleapis.com (maps.googleapis.com)... 2404:6800:4009:801::200a, 142.250.67.138
+Connecting to maps.googleapis.com (maps.googleapis.com)|2404:6800:4009:801::200a|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: unspecified [application/xml]
+Saving to: ‘xml?query=restaurants+in+Sydney’
+
+xml?query=restaurants+in+Sydney                        [<=>                                                                                                             ]       0  --.-KB/s               xml?query=restaurants+in+Sydney                        [ <=>                                                                                                            ]     308  --.-KB/s    in 0s      
+
+2021-04-07 17:34:59 (11.9 MB/s) - ‘xml?query=restaurants+in+Sydney’ saved [308]
+
