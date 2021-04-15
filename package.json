@@ -17,6 +17,7 @@
     "http-errors": "~1.6.3",
     "https": "^1.0.0",
     "jade": "^1.11.0",
+    "moment": "^2.29.1",
     "mongoose": "^5.11.15",
     "mongoose-unique-validator": "^2.0.3",
     "morgan": "^1.9.1",
