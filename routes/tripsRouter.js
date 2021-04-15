@@ -9,7 +9,8 @@ var passport=require('passport');
 var authenticate=require('../authenticate');
 var uniqueValidator = require('mongoose-unique-validator');
 const axios = require('axios');
-var moment = require('moment')
+var moment = require('moment');
+const { path } = require('../app');
 
 //const src = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+Sydney&key=${process.env.GoogleKey}`
 
@@ -64,7 +65,7 @@ tripsRouter.route('/test')
 tripsRouter.route('/makeTrip')
 .post(authenticate.verifyUser,async(req, res, next)=> {
 
-  var startDate = moment('01/01/1970 00:00:00', 'DD/MM/YYYY HH:mm:ss')
+    var startDate = moment('01/01/1970 00:00:00', 'DD/MM/YYYY HH:mm:ss')
   var endDate = moment(req.body.date, 'DD/MM/YYYY HH:mm:ss')
   var secondsDiff = endDate.diff(startDate, 'seconds')
 
@@ -286,7 +287,7 @@ while (queue.length !== 0) {
 		});
 		continue;
 	}
-      queue.push({
+      await queue.push({
         path: newPath2,
         timeTaken: newTimeTaken2,
         totalScore: current.totalScore,
@@ -294,8 +295,31 @@ while (queue.length !== 0) {
 
 }
 
-    res.json(finalPaths);
 
+await finalPaths.sort((a,b)=> {
+  return b.score - a.score;}
+  )
+
+ //   res.json(finalPaths);
+
+  var result =[];
+
+  for( i=0;i<5;i++){
+    var path= []
+    for( j=0 ; j<finalPaths[i].path.length ;j++){
+      
+      if(finalPaths[i].path[j]==-1){
+        await path.push("wait")
+      }else{
+        await path.push(req.body.placeId[finalPaths[i].path[j]])
+      }
+    }
+   await  result.push({
+      "path":path,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
+    })
+  }
+
+    res.json({"result" : result,"start":req.body.start});
 
    }, (err) => next(err))
      .catch((err) => next(err));
