@@ -17,7 +17,7 @@ const connect = mongoose.connect(url);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var placesRouter = require('./routes/placesRouter');
+var tripsRouter = require('./routes/tripsRouter');
 
 var app = express();
 
@@ -68,7 +68,7 @@ app.use(passport.session());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-app.use('/places', placesRouter);
+app.use('/trips', tripsRouter);
 
 function auth(req,res,next) {
   //	console.log(req.session);
