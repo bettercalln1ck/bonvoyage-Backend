@@ -38,7 +38,7 @@ router.route('/profile/:userId')
       res.statusCode=200;
       res.setHeader('Content-Type', 'application/json');
   //    if(user.followers.includes(req.user._id)){
-        res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname});
+        res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname, bio: user.bio});
  //     }
  //     else{
  //       res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname});
@@ -138,6 +138,20 @@ router.get('/logout',(req,res) =>{
 		next(err);
 	}
 
+});
+
+router.route('/updateProfile')
+.options((req, res) => { res.sendStatus(200); })
+.put(authenticate.verifyUser, (req, res, next) => {
+  User.findByIdAndUpdate(req.user._id, {
+    $set: req.body
+}, {new: true})
+.then((user) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.json(user);
+}, (err) => next(err))
+.catch((err) => next(err));
 });
 
 module.exports = router;
