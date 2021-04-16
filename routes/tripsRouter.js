@@ -82,7 +82,6 @@ tripsRouter.route('/makeTrip')
 
     origins = origins.slice(0,-3);
     matrix=[]
-    console.log(origins)
     time=1618909200
     for( k = trip.start ; k <= trip.end ; k++)
     {
@@ -114,22 +113,27 @@ tripsRouter.route('/makeTrip')
      await  matrix.push(rows);
     }
 
-        console.log(matrix);
     //   trip.temporalGraph = matrix;
 
    //await  res.json(matrix);
 
    // src = "https://maps.googleapis.com/maps/api/place/textsearch/json?query="+trip.cityName+"&type=tourist_attraction&rankby=prominence&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
     dataX = []
-
+    openingTime = []
 
         await Promise.all( req.body.placeId.map( async (element) => {
             src2 = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + element + "&fields=opening_hours&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
             console.log(src2)
             await axios.get(src2).then(async (resp) => {
                 if(!(resp.data.result.opening_hours == null)){
-                  console.log(resp);
-                    await dataX.push({place_id:element.place_id,  formatted_address: element.formatted_address, name:element.name, geometry: element.geometry, rating: element.rating, user_ratings_total: element.user_ratings_total, types: element.types ,  opening_hours: resp.data.result.opening_hours.periods})
+          //        console.log(resp);
+        //  await console.log(startDate.day());
+                    await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
+                    var open = resp.data.result.opening_hours.periods[startDate.day()].open.time
+                    open = (open/100 + (open%100)/60)
+                    var close = resp.data.result.opening_hours.periods[startDate.day()].close.time
+                    close = (close/100 + (close%100)/60)
+                    await openingTime.push([open,close]);
                 }
             }).catch(error => {
                 console.log(error);
@@ -138,12 +142,12 @@ tripsRouter.route('/makeTrip')
 
        })
          )
-         console.log(dataX)
      //  await res.status(200).json(dataX);
 
   // .catch(error => {
   //   console.log(error);
   //   return next(err); 
+  console.log(openingTime)
 
                 let inputData = {
             start: req.body.start,
@@ -157,12 +161,7 @@ tripsRouter.route('/makeTrip')
               [11, 15],
               [15 ,16]
             ],
-            openTime: [
-              [8, 18],
-              [14, 20],
-              [8, 21],
-              [8,21]
-            ],
+            openTime: openingTime,
           };
 var uniqueNodes = [];
 for (let i = 0; i < inputData.temporalGraph[0].length; i++) {
