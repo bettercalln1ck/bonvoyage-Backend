@@ -63,265 +63,315 @@ tripsRouter.route('/test')
 
 
 tripsRouter.route('/makeTrip')
-.post(authenticate.verifyUser,async(req, res, next)=> {
-
+.post(async(req, res, next)=> {
+    startingTime = req.body.start
     var startDate = moment('01/01/1970 00:00:00', 'DD/MM/YYYY HH:mm:ss')
-  var endDate = moment(req.body.date, 'DD/MM/YYYY HH:mm:ss')
-  var secondsDiff = endDate.diff(startDate, 'seconds')
-
-  Trips.create((req.body))
-  .then(async(trip) =>{
-    origins = ""
-
-    await Promise.all(
-      trip.placeId.map(async (trp) =>{
-         origins += "place_id:"+trp+"%7C";
-      })
-    )
+    var endDate = moment(req.body.date, 'DD/MM/YYYY HH:mm:ss')
+    var secondsDiff = endDate.diff(startDate, 'seconds')
+    var startTime =moment(req.body.start,'HH:mm:ss')
+    req.body.start = startTime.hour()+ startTime.minute()/60;
+    var endTime =moment(req.body.end,'HH:mm:ss')
+    req.body.end = endTime.hour()+ endTime.minute()/60;
 
 
-    origins = origins.slice(0,-3);
-    matrix=[]
-    time=1618909200
-    for( k = trip.start ; k <= trip.end ; k++)
-    {
-        
-    src = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+origins+"&destinations="+origins+"&departure_time="+time.toString()+"&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920";
-    time+=3600
-    console.log(src)
-    rows = []
-    await axios.get(src)
-  .then(async (response) => {
-    console.log(response.data.rows)
+      await Trips.create((req.body))
+      .then(async(trip) =>{
+        origins = ""
 
-      for(i=0;i<4;i++){
-        columns=[]
-        for(j=0;j<4;j++){
-          if(response.data.rows[i].elements[j].duration.value == 0){
-            await columns.push(0);
-          }else{
-            await columns.push(response.data.rows[i].elements[j].duration_in_traffic.value/60/60);
-          }
-        }
-  //      console.log(columns);
-      await  rows.push(columns);
-      }
-  }).catch(error => {
-         console.log(error);
-         next(error);
-       });
-     await  matrix.push(rows);
-    }
+              //create origins url that contain placeId's
+              await Promise.all(
+                trip.placeId.map(async (trp) =>{
+                  origins += "place_id:"+trp+"%7C";
+                })
+              )
 
-    //   trip.temporalGraph = matrix;
+                //calculate distance matrix
+                origins = origins.slice(0,-3);
+                matrix=[]
+                time = secondsDiff
+                for( k = req.body.start ; k <= req.body.end; k++)
+                {
+                    
+                src = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+origins+"&destinations="+origins+"&departure_time="+time.toString()+"&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920";
+                time+=3600
+                console.log(src)
+                rows = []
+                await axios.get(src)
+              .then(async (response) => {
+              //  console.log(response.data.rows)
 
-   //await  res.json(matrix);
-
-   // src = "https://maps.googleapis.com/maps/api/place/textsearch/json?query="+trip.cityName+"&type=tourist_attraction&rankby=prominence&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
-    dataX = []
-    openingTime = []
-
-        await Promise.all( req.body.placeId.map( async (element) => {
-            src2 = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + element + "&fields=opening_hours&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
-            console.log(src2)
-            await axios.get(src2).then(async (resp) => {
-                if(!(resp.data.result.opening_hours == null)){
-          //        console.log(resp);
-        //  await console.log(startDate.day());
-                    await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
-                    var open = resp.data.result.opening_hours.periods[startDate.day()].open.time
-                    open = (open/100 + (open%100)/60)
-                    var close = resp.data.result.opening_hours.periods[startDate.day()].close.time
-                    close = (close/100 + (close%100)/60)
-                    await openingTime.push([open,close]);
+                  for(i=0;i<req.body.placeId.length;i++){
+                    columns=[]
+                    for(j=0;j<req.body.placeId.length;j++){
+                      if(response.data.rows[i].elements[j].duration.value == 0){
+                        await columns.push(0);
+                      }else{
+                        await columns.push(response.data.rows[i].elements[j].duration_in_traffic.value/60/60);
+                      }
+                    }
+              //      console.log(columns);
+                  await  rows.push(columns);
+                  }
+              }).catch(error => {
+                    console.log(error);
+                    next(error);
+                  });
+                await  matrix.push(rows);
                 }
+
+                openingTime = []
+              //calculate opening time
+              // dataX = []
+              // openingTime = []
+
+              //     await Promise.all( req.body.placeId.map( async (element) => {
+              //         src2 = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + element + "&fields=opening_hours&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+              //         console.log(src2)
+              //         await axios.get(src2).then(async (resp) => {
+              //             if(!(resp.data.result.opening_hours == null)){
+              //       //        console.log(resp);
+              //     //  await console.log(startDate.day());
+              //                 await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
+              //                 var open = resp.data.result.opening_hours.periods[startDate.day()].open.time
+              //                 open = (open/100 + (open%100)/60)
+              //                 var close = resp.data.result.opening_hours.periods[startDate.day()].close.time
+              //                 close = (close/100 + (close%100)/60)
+              //                 await openingTime.push([open,close]);
+              //             }
+              //         }).catch(error => {
+              //             console.log(error);
+              //             return next(err); 
+              //         });
+
+              //   })
+              //     )
+
+              for(i = 0 ;i<req.body.placeId.length ;i++){
+                    //var x = [0,0]
+                    //x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
+                    //x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
+                    //await peakTime.push(x)
+                    openingTime.push([6,20])
+                }
+
+
+            //calculate preferred time
+            var peakTime = []
+
+
+            for(var i in openingTime ){
+                var x = [0,0]
+                x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
+                x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
+                await peakTime.push(x)
+            }
+
+            //calculate visiting time
+            var visiting = []
+
+            for(var i in openingTime ){
+                x = 1 + (openingTime [i][1] - openingTime [i][0] - 6)/6
+                if(x<1) x = 1
+                if(x>3) x = 3
+                await visiting.push(x)
+            }
+
+
+          //calculate scores of places
+          placesScore = []
+          placesInfo = []
+
+          await Promise.all( req.body.placeId.map( async (element) => {
+            src2 = "https://maps.googleapis.com/maps/api/place/details/json?place_id="+element+"&fields=rating,user_ratings_total,formatted_address,name&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+            console.log(src2)
+            await axios.get(src2).then(async (response) => {
+                await placesScore.push(response.data.result.rating * response.data.result.user_ratings_total)
+                await placesInfo.push([element,response.data.result.name,response.data.result.formatted_address])
             }).catch(error => {
                 console.log(error);
                 return next(err); 
             });
 
-       })
-         )
-     //  await res.status(200).json(dataX);
-
-  // .catch(error => {
-  //   console.log(error);
-  //   return next(err); 
-  console.log(openingTime)
-
-                let inputData = {
-            start: req.body.start,
-            end: req.body.end,
-            temporalGraph: matrix ,
-            score: [45, 86, 76 ,67],
-            timeToVisit: [0, 0.1, 1.2,2],
-            preferedTime: [
-              [9, 10],
-              [14, 15],
-              [11, 15],
-              [15 ,16]
-            ],
-            openTime: openingTime,
-          };
-var uniqueNodes = [];
-for (let i = 0; i < inputData.temporalGraph[0].length; i++) {
-	await uniqueNodes.push(i);
-}
-var queue = [
-	{
-		path: ["0"],
-		timeTaken: 0.0,
-		totalScore: 0.0,
-	},
-];
-const waitTime = 1;
-let finalPaths = [];
-while (queue.length !== 0) {
-	// console.log("\nLoop Entered\n");
-	var current = queue[queue.length - 1];
-	 queue.pop();
-
-	var lastLocation = current.path[current.path.length - 1];
-	var tempo = 1;
-	while (lastLocation == -1) {
-		lastLocation = current.path[current.path.length - tempo];
-		tempo++;
-	}
-
-	var timeLeft = inputData.end - inputData.start - current.timeTaken;
-
-	if (timeLeft <= 0) {
-		finalPaths.push({
-			path: current.path,
-			score: current.totalScore,
-			timeTaken: current.timeTaken,
-		});
-		continue;
-	}
-	var flag = 1;
-	for (var x in uniqueNodes) {
-		if (!current.path.includes(x)) {
-			var newPath = [...current.path];
-			newPath.push(x);
-			var newTimeTaken =
-				current.timeTaken +
-				inputData.temporalGraph[Math.floor(current.timeTaken)][
-					lastLocation
-				][x] +
-				inputData.timeToVisit[x];
-			//if condition for is x open at current Time
-			if (
-				inputData.start + newTimeTaken > inputData.openTime[x][1] ||
-				inputData.start + newTimeTaken - inputData.timeToVisit[x] <
-					inputData.openTime[x][0]
-			) {
-				continue;
-			}
-			var newScore = current.totalScore;
-			if (
-				inputData.openTime[x][0] <=
-					newTimeTaken + inputData.start - inputData.timeToVisit[x] &&
-				newTimeTaken + inputData.start - inputData.timeToVisit[x] <=
-					(inputData.openTime[x][0] + inputData.openTime[x][1]) / 2
-			) {
-				// console.log("1:", 2*(newTimeTaken + inputData.start - inputData.timeToVisit[x]-inputData.openTime[x][0])/(inputData.openTime[x][1]-inputData.openTime[x][0]))
-				newScore =
-					newScore +
-					inputData.score[x] *
-						(1 +
-							(2 *
-								(newTimeTaken +
-									inputData.start -
-									inputData.timeToVisit[x] -
-									inputData.openTime[x][0])) /
-								(inputData.openTime[x][1] -
-									inputData.openTime[x][0]));
-			} else if (
-				(inputData.openTime[x][0] + inputData.openTime[x][1]) / 2 <=
-					newTimeTaken + inputData.start - inputData.timeToVisit[x] &&
-				newTimeTaken + inputData.start - inputData.timeToVisit[x] <=
-					inputData.openTime[x][1]
-			) {
-				// console.log("2:", 2*(inputData.openTime[x][1] - (newTimeTaken + inputData.start - inputData.timeToVisit[x]))/(inputData.openTime[x][1]-inputData.openTime[x][0]))
-				newScore =
-					newScore +
-					inputData.score[x] *
-						(1 +
-							(2 *
-								(inputData.openTime[x][1] -
-									(newTimeTaken +
-										inputData.start -
-										inputData.timeToVisit[x]))) /
-								(inputData.openTime[x][1] -
-									inputData.openTime[x][0]));
-			} else {
-				newScore = newScore + inputData.score[x];
-			}
-			// if (
-			// 	inputData.start + newTimeTaken < inputData.preferedTime[x][1] &&
-			// 	inputData.start + newTimeTaken - inputData.timeToVisit[x] >
-			// 		inputData.preferedTime[x][0]
-			// ) {
-			// 	newScore = newScore + inputData.score[x] * 2; //to be changed
-			// } else {
-			// 	newScore = newScore + inputData.score[x];
-			// }
-			flag = 0;
-			queue.push({
-				path: newPath,
-				timeTaken: newTimeTaken,
-				totalScore: newScore,
-			});
-		}
-	}
-	//one more possibility where he waits instead of moving somewhere
-	var newPath2 = [...current.path];
-	newPath2.push("-1");
-	var newTimeTaken2 = current.timeTaken + waitTime;
-	if (newTimeTaken2 + inputData.start >= inputData.end) {
-		finalPaths.push({
-			path: current.path,
-			score: current.totalScore,
-			timeTaken: current.timeTaken,
-		});
-		continue;
-	}
-      await queue.push({
-        path: newPath2,
-        timeTaken: newTimeTaken2,
-        totalScore: current.totalScore,
-      });
-
-}
+          })
+          )
 
 
-await finalPaths.sort((a,b)=> {
-  return b.score - a.score;}
-  )
 
- //   res.json(finalPaths);
 
-  var result =[];
 
-  for( i=0;i<5;i++){
-    var path= []
-    for( j=0 ; j<finalPaths[i].path.length ;j++){
-      
-      if(finalPaths[i].path[j]==-1){
-        await path.push("wait")
-      }else{
-        await path.push(req.body.placeId[finalPaths[i].path[j]])
-      }
+      let inputData = {
+                start: req.body.start,
+                end: req.body.end,
+                temporalGraph: matrix ,
+                score: placesScore,
+                timeToVisit: visiting,
+                preferedTime: peakTime,
+                openTime: openingTime,
+              };
+
+
+    console.log(inputData)
+
+    var uniqueNodes = [];
+    for (let i = 0; i < inputData.temporalGraph[0].length; i++) {
+      await uniqueNodes.push(i);
     }
-   await  result.push({
-      "path":path,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
-    })
-  }
+    var queue = [
+      {
+        path: ["0"],
+        timeTaken: 0.0,
+        totalScore: 0.0,
+      },
+    ];
+    const waitTime = 1;
+    let finalPaths = [];
+    while (queue.length !== 0) {
+      // console.log("\nLoop Entered\n");
+      var current = queue[queue.length - 1];
+      queue.pop();
 
-    res.json({"result" : result,"start":req.body.start});
+      var lastLocation = current.path[current.path.length - 1];
+      var tempo = 1;
+      while (lastLocation == -1) {
+        lastLocation = current.path[current.path.length - tempo];
+        tempo++;
+      }
 
-   }, (err) => next(err))
-     .catch((err) => next(err));
+      var timeLeft = inputData.end - inputData.start - current.timeTaken;
+
+      if (timeLeft <= 0) {
+        finalPaths.push({
+          path: current.path,
+          score: current.totalScore,
+          timeTaken: current.timeTaken,
+        });
+        continue;
+      }
+      var flag = 1;
+      for (var x in uniqueNodes) {
+        if (!current.path.includes(x)) {
+          var newPath = [...current.path];
+          newPath.push(x);
+          var newTimeTaken =
+            current.timeTaken +
+            inputData.temporalGraph[Math.floor(current.timeTaken)][
+              lastLocation
+            ][x] +
+            inputData.timeToVisit[x];
+          //if condition for is x open at current Time
+          if (
+            inputData.start + newTimeTaken > inputData.openTime[x][1] ||
+            inputData.start + newTimeTaken - inputData.timeToVisit[x] <
+              inputData.openTime[x][0]
+          ) {
+            continue;
+          }
+          var newScore = current.totalScore;
+          if (
+            inputData.openTime[x][0] <=
+              newTimeTaken + inputData.start - inputData.timeToVisit[x] &&
+            newTimeTaken + inputData.start - inputData.timeToVisit[x] <=
+              (inputData.openTime[x][0] + inputData.openTime[x][1]) / 2
+          ) {
+            // console.log("1:", 2*(newTimeTaken + inputData.start - inputData.timeToVisit[x]-inputData.openTime[x][0])/(inputData.openTime[x][1]-inputData.openTime[x][0]))
+            newScore =
+              newScore +
+              inputData.score[x] *
+                (1 +
+                  (2 *
+                    (newTimeTaken +
+                      inputData.start -
+                      inputData.timeToVisit[x] -
+                      inputData.openTime[x][0])) /
+                    (inputData.openTime[x][1] -
+                      inputData.openTime[x][0]));
+          } else if (
+            (inputData.openTime[x][0] + inputData.openTime[x][1]) / 2 <=
+              newTimeTaken + inputData.start - inputData.timeToVisit[x] &&
+            newTimeTaken + inputData.start - inputData.timeToVisit[x] <=
+              inputData.openTime[x][1]
+          ) {
+            // console.log("2:", 2*(inputData.openTime[x][1] - (newTimeTaken + inputData.start - inputData.timeToVisit[x]))/(inputData.openTime[x][1]-inputData.openTime[x][0]))
+            newScore =
+              newScore +
+              inputData.score[x] *
+                (1 +
+                  (2 *
+                    (inputData.openTime[x][1] -
+                      (newTimeTaken +
+                        inputData.start -
+                        inputData.timeToVisit[x]))) /
+                    (inputData.openTime[x][1] -
+                      inputData.openTime[x][0]));
+          } else {
+            newScore = newScore + inputData.score[x];
+          }
+          // if (
+          // 	inputData.start + newTimeTaken < inputData.preferedTime[x][1] &&
+          // 	inputData.start + newTimeTaken - inputData.timeToVisit[x] >
+          // 		inputData.preferedTime[x][0]
+          // ) {
+          // 	newScore = newScore + inputData.score[x] * 2; //to be changed
+          // } else {
+          // 	newScore = newScore + inputData.score[x];
+          // }
+          flag = 0;
+          queue.push({
+            path: newPath,
+            timeTaken: newTimeTaken,
+            totalScore: newScore,
+          });
+        }
+      }
+      //one more possibility where he waits instead of moving somewhere
+      var newPath2 = [...current.path];
+      newPath2.push("-1");
+      var newTimeTaken2 = current.timeTaken + waitTime;
+      if (newTimeTaken2 + inputData.start >= inputData.end) {
+        finalPaths.push({
+          path: current.path,
+          score: current.totalScore,
+          timeTaken: current.timeTaken,
+        });
+        continue;
+      }
+          await queue.push({
+            path: newPath2,
+            timeTaken: newTimeTaken2,
+            totalScore: current.totalScore,
+          });
+
+    }
+
+
+    await finalPaths.sort((a,b)=> {
+      return b.score - a.score;}
+      )
+
+    //   res.json(finalPaths);
+
+      console.log(finalPaths)
+      var result =[];
+
+      for( i=0;i<5;i++){
+        var path= []
+        for( j=0 ; j<finalPaths[i].path.length ;j++){
+          
+          if(finalPaths[i].path[j]==-1){
+            await path.push(["wait","",""])
+          }else{
+            await path.push(placesInfo[finalPaths[i].path[j]])
+          }
+        }
+      await  result.push({
+          "path":path,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
+        })
+      }
+
+        res.json({"result" : result,"start":startingTime});
+
+      }, (err) => next(err))
+        .catch((err) => next(err));
 
 });
 

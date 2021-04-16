@@ -15,14 +15,13 @@ var matrix = new Schema({
 const tripSchema = new Schema({
         cityName :{
             type: String,
-            required: true
         },
         start :{
-            type: Number,
+            type: String,
             required: true
         },
         end :{
-            type: Number,
+            type: String,
             required: true
         },
         temporalGraph:[
