@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const commentSchema = new Schema({
+const messageSchema = new Schema({
     comment:  {
         type: String,
         required: true
@@ -9,15 +9,11 @@ const commentSchema = new Schema({
     author:  {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    },
-    merch: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Merch'
     }
 }, {
     timestamps: true
 });
 
-var Comments = mongoose.model('Comment', commentSchema);
+var Messages = mongoose.model('Message', messageSchema);
 
-module.exports = Comments;
+module.exports = Messages;

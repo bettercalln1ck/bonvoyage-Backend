@@ -1,19 +1,9 @@
 var mongoose=require('mongoose');
 var Schema=mongoose.Schema;
 
-var rows =new Schema({
-    columns:[{
-        type:Number,
-    }]
-})
-
-
-var matrix = new Schema({
-    rows: [rows]
-})
 
 const tripSchema = new Schema({
-        cityName :{
+        tripName :{
             type: String,
         },
         start :{
@@ -24,33 +14,16 @@ const tripSchema = new Schema({
             type: String,
             required: true
         },
-        temporalGraph:[
-            matrix
-        ],
-        score : [{
-            type: Number,
-        }],
-        timeToVisit : [{
-            type: Number,
-        }],
-        preferredTime:[{
-            x :{
-                type: Number,
-            },
-            y:{
-                type: Number,
-            }
-        }],
-        openTime:[{
-            x :{
-                type: Number,
-            },
-            y:{
-                type: Number,
-            }
-        }],
+        date:{
+            type: String,
+            required: true
+        },
         placeId:[{
             type:String
+        }],
+        messages:[{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Message'
         }]       
 }, {
     timestamps: true

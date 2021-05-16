@@ -17,7 +17,7 @@ const { path } = require('../app');
 
 tripsRouter.route('/')
 .get(authenticate.verifyUser,(req, res, next)=> {
-  src = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=Jaipur&type=tourist_attraction&rankby=prominence&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+  src =`https://maps.googleapis.com/maps/api/place/textsearch/json?query=Jaipur&type=tourist_attraction&rankby=prominence&key=${process.env.GoogleKey}`
   console.log(src)
 axios.get(src)
   .then(response => {
@@ -32,7 +32,7 @@ axios.get(src)
 
 tripsRouter.route('/test')
 .get(async (req,res,next) => {
- src="https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:ChIJlXJ26RuxbTkR0qsToxFP05c%7Cplace_id:ChIJ-w3Sy1qwbTkRK34UR2ffIWI%7Cplace_id:ChIJx0lfsbGxbTkRgVOhxJ7EGbw%7Cplace_id:ChIJwbAghgu0bTkRYHt9ATEVgEQ&destinations=place_id:ChIJlXJ26RuxbTkR0qsToxFP05c%7Cplace_id:ChIJ-w3Sy1qwbTkRK34UR2ffIWI%7Cplace_id:ChIJx0lfsbGxbTkRgVOhxJ7EGbw%7Cplace_id:ChIJwbAghgu0bTkRYHt9ATEVgEQ&departure_time=1618909200&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+ src=`https://maps.googleapis.com/maps/api/distancematrix/json?origins=place_id:ChIJlXJ26RuxbTkR0qsToxFP05c%7Cplace_id:ChIJ-w3Sy1qwbTkRK34UR2ffIWI%7Cplace_id:ChIJx0lfsbGxbTkRgVOhxJ7EGbw%7Cplace_id:ChIJwbAghgu0bTkRYHt9ATEVgEQ&destinations=place_id:ChIJlXJ26RuxbTkR0qsToxFP05c%7Cplace_id:ChIJ-w3Sy1qwbTkRK34UR2ffIWI%7Cplace_id:ChIJx0lfsbGxbTkRgVOhxJ7EGbw%7Cplace_id:ChIJwbAghgu0bTkRYHt9ATEVgEQ&departure_time=1618909200&key=${process.env.GoogleKey}`;
 
   rows=[];
   size=4;
@@ -92,14 +92,15 @@ tripsRouter.route('/makeTrip')
                 for( k = req.body.start ; k <= req.body.end; k++)
                 {
                     
-                src = "https://maps.googleapis.com/maps/api/distancematrix/json?origins="+origins+"&destinations="+origins+"&departure_time="+time.toString()+"&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920";
+                src = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=`+origins+`&destinations=`+origins+`&departure_time=`+time.toString()+`&key=${process.env.GoogleKey}`;
+                
                 time+=3600
                 console.log(src)
                 rows = []
                 await axios.get(src)
               .then(async (response) => {
               //  console.log(response.data.rows)
-
+              console.log(src);
                   for(i=0;i<req.body.placeId.length;i++){
                     columns=[]
                     for(j=0;j<req.body.placeId.length;j++){
@@ -120,51 +121,68 @@ tripsRouter.route('/makeTrip')
                 }
 
                 openingTime = []
-              //calculate opening time
-              // dataX = []
-              // openingTime = []
+            //  calculate opening time
+              dataX = []
+              openingTime = []
 
-              //     await Promise.all( req.body.placeId.map( async (element) => {
-              //         src2 = "https://maps.googleapis.com/maps/api/place/details/json?placeid=" + element + "&fields=opening_hours&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
-              //         console.log(src2)
-              //         await axios.get(src2).then(async (resp) => {
-              //             if(!(resp.data.result.opening_hours == null)){
-              //       //        console.log(resp);
-              //     //  await console.log(startDate.day());
-              //                 await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
-              //                 var open = resp.data.result.opening_hours.periods[startDate.day()].open.time
-              //                 open = (open/100 + (open%100)/60)
-              //                 var close = resp.data.result.opening_hours.periods[startDate.day()].close.time
-              //                 close = (close/100 + (close%100)/60)
-              //                 await openingTime.push([open,close]);
-              //             }
-              //         }).catch(error => {
-              //             console.log(error);
-              //             return next(err); 
-              //         });
+                  await Promise.all( req.body.placeId.map( async (element) => {
+                      src2 = `https://maps.googleapis.com/maps/api/place/details/json?placeid=` + element + `&fields=opening_hours&key=${process.env.GoogleKey}`
+                      console.log(src2)
+                      await axios.get(src2).then(async (resp) => {
+                          if(Object.keys(resp.data.result).length === 0){
+                            await openingTime.push([10,22])
+                            return ;
+                          }
+                          if(!(resp.data.result.opening_hours == null)){
+                    //        console.log(resp);
+                  //  await console.log(startDate.day());
+                              await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
+                              var open ;
+                              if(Object.keys(resp.data.result.opening_hours.periods[startDate.day()]).length === 0){
+                                open = 6;
+                              }else{
+                                open = resp.data.result.opening_hours.periods[startDate.day()].open.time;
+                              open = (open/100 + (open%100)/60)
+                              }
+                              var close ;
+                              if(Object.keys(resp.data.result.opening_hours.periods[startDate.day()]).length === 0){
+                                close = 6;
+                              }else{
+                                close = resp.data.result.opening_hours.periods[startDate.day()].close.time
+                              close = (close/100 + (close%100)/60)
+                              }
+                              await openingTime.push([open,close]);
+                          }
+                      }).catch(error => {
+                          console.log(error);
+                          return next(err); 
+                      });
 
-              //   })
-              //     )
+                })
+                  )
+
+              var peakTime = []
+              
 
               for(i = 0 ;i<req.body.placeId.length ;i++){
-                    //var x = [0,0]
-                    //x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
-                    //x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
-                    //await peakTime.push(x)
-                    openingTime.push([6,20])
+                    var x = [0,0]
+                    x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
+                    x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
+                    await peakTime.push(x)
+                   // openingTime.push([6,20])
                 }
 
 
             //calculate preferred time
-            var peakTime = []
+            
 
 
-            for(var i in openingTime ){
-                var x = [0,0]
-                x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
-                x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
-                await peakTime.push(x)
-            }
+            // for(var i in openingTime ){
+            //     var x = [0,0]
+            //     x[0] = (openingTime [i][0]+openingTime [i][1])/2 - 2
+            //     x[1] = (openingTime [i][0]+openingTime [i][1])/2 + 2
+            //     await peakTime.push(x)
+            // }
 
             //calculate visiting time
             var visiting = []
@@ -182,10 +200,14 @@ tripsRouter.route('/makeTrip')
           placesInfo = []
 
           await Promise.all( req.body.placeId.map( async (element) => {
-            src2 = "https://maps.googleapis.com/maps/api/place/details/json?place_id="+element+"&fields=rating,user_ratings_total,formatted_address,name&key=AIzaSyArM7cAmAWdHA2I6iL0XLLo979LOyy-920"
+            src2 = `https://maps.googleapis.com/maps/api/place/details/json?place_id=`+element+`&fields=rating,user_ratings_total,formatted_address,name&key=${process.env.GoogleKey}`
             console.log(src2)
             await axios.get(src2).then(async (response) => {
+              if(Object.keys(response.data.result.rating).length === 0){
+                await placesScore.push(90000);
+              }else{
                 await placesScore.push(response.data.result.rating * response.data.result.user_ratings_total)
+              }
                 await placesInfo.push([element,response.data.result.name,response.data.result.formatted_address])
             }).catch(error => {
                 console.log(error);
@@ -343,6 +365,7 @@ tripsRouter.route('/makeTrip')
 
     }
 
+   // res.json({"result" : finalPaths,"start":startingTime});
 
     await finalPaths.sort((a,b)=> {
       return b.score - a.score;}
