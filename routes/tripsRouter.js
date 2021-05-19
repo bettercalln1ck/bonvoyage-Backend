@@ -11,6 +11,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 const axios = require('axios');
 var moment = require('moment');
 const { path } = require('../app');
+var User = require('../models/user');
 
 //const src = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=restaurants+in+Sydney&key=${process.env.GoogleKey}`
 
@@ -65,7 +66,7 @@ tripsRouter.route('/test')
 tripsRouter.route('/search')
 .post(authenticate.verifyUser,async(req, res, next)=> {
   Trips.find({$text :{$search : req.body.search}},{"_id":1,"tripName":1,"date":1,"start":1,"end":1})
-  .limit(20)
+  .limit(100)
   .exec((error,data)=>{
     if(error){
       next(error);
@@ -87,10 +88,12 @@ tripsRouter.route('/makeTrip')
     req.body.end = endTime.hour()+ endTime.minute()/60;
 
     req.body.admin = req.user._id;
-    req.body.users = req.user._id;
+    req.body.users = [req.user._id];
 
       await Trips.create((req.body))
       .then(async(trip) =>{
+       // res.json(trip);
+      //  return;
         origins = ""
 
               //create origins url that contain placeId's
@@ -431,11 +434,42 @@ tripsRouter.route('/makeTrip')
 
 });
 
+tripsRouter.route('/tripInfo/:tripId')
+.get(async (req,res,next) => {
+  Trips.findById(req.params.tripId,{placeId:1,tripName:1,start:1,end:1,data:1})
+  .then((trip)=>{
+      res.json({sucess:true,tripInfo:trip});
+  }, (err) => next(err))
+        .catch((err) => next(err));
+});
 
-// tripsRouter.route('/addPlaces')
-// .route(authenticate.verify,(req,res,next) =>{
-
-// })
+tripsRouter.route('/joinTrip/:tripId')
+.get(authenticate.verifyUser,(req,res,next) =>{
+  Trips.findByIdAndUpdate(req.params.tripId,{
+    $addToSet:{users:req.user._id}
+  },{new:true})
+  .then((trip) =>{
+    User.findByIdAndUpdate(req.user._id,{
+      $addToSet:{trips: req.params.tripId}},{new:true})
+      .then((user) =>{
+        res.json({success:true});
+      })   
+  }, (err) => next(err))
+  .catch((err) => next(err));
+})
+.delete((req,res,next) =>{
+  Trips.findByIdAndUpdate(req.params.tripId,{
+    $pull:{users:req.user._id}
+  },{new:true})
+  .then((trip) =>{
+    User.findByIdAndUpdate(req.user._id,{
+      $pull:{trips: req.params.tripId}},{new:true})
+      .then((user) =>{
+        res.json({success:true});
+      })   
+  }, (err) => next(err))
+  .catch((err) => next(err));
+});
 
 module.exports = tripsRouter;
 

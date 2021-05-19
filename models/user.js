@@ -27,7 +27,11 @@ var User=new Schema({
 	image: {
 		type: String,
 		default: ''
-	}
+	},
+	trips:[{
+		type: mongoose.Schema.Types.ObjectId,
+        ref: 'Trips'
+	}]
     },
     {
         timestamps: true

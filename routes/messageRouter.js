@@ -13,9 +13,19 @@ const Messages = require('../models/messageModel');
 messageRouter.use(bodyParser.json());
 
 messageRouter.route('/:tripId')
-.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
-.get(cors.corsWithOptions,authenticate.verifyUser, (req,res,next) => {
-    Trips.findById(req.params.tripId)
+.options( (req, res) => { res.sendStatus(200); })
+.get(authenticate.verifyUser, async (req,res,next) => {
+    await Users.findById(req.user._id)
+    .then((user)=>{
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        {
+            res.json("Join this trip to view message");
+            return;
+        }
+    },(err) => next(err))
+    .catch((err) => next(err));
+
+    await Trips.findById(req.params.tripId)
     .populate('messages')
     .then((trip) => {
         res.statusCode = 200;
@@ -24,7 +34,17 @@ messageRouter.route('/:tripId')
     },(err) => next(err))
     .catch((err) => next(err));
 })
-.post(cors.corsWithOptions, authenticate.verifyUser, (req,res,next) => {
+.post( authenticate.verifyUser, async (req,res,next) => {
+    await Users.findById(req.user._id)
+    .then((user)=>{
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        {
+            res.json("Join this trip to send message");
+            return;
+        }
+    },(err) => next(err))
+    .catch((err) => next(err));
+
     if(req.body != null){
         req.body.author = req.user._id;
         Messages.create(req.body)
@@ -48,7 +68,7 @@ messageRouter.route('/:tripId')
         return next(err);
     }
 })
-.put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+.put( authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('PUT operation not supported on /comments/:postId');
 });
@@ -87,9 +107,20 @@ messageRouter.route('/:tripId')
 // });
 
 messageRouter.route('/:tripId/:messageId')
-.options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
-.get(cors.corsWithOptions,authenticate.verifyUser, (req,res,next) => {
-    Messages.findById(req.params.messageId)
+.options( (req, res) => { res.sendStatus(200); })
+.get(authenticate.verifyUser, async(req,res,next) => {
+
+    await Users.findById(req.user._id)
+    .then((user)=>{
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        {
+            res.json("Join this trip to view message");
+            return;
+        }
+    },(err) => next(err))
+    .catch((err) => next(err));
+
+    await Messages.findById(req.params.messageId)
     .then((message) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -97,11 +128,11 @@ messageRouter.route('/:tripId/:messageId')
     },(err) => next(err))
     .catch((err) => next(err));
 })
-.post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+.post( authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
     res.end('POST operation not supported on /messages/:messsageId/'+ req.params.commentId);
 })
-.put(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+.put(authenticate.verifyUser, (req, res, next) => {
     Messages.findById(req.params.messageId)
     .then((message) => {
         if(message != null){
@@ -128,7 +159,7 @@ messageRouter.route('/:tripId/:messageId')
     }, (err) => next(err))
     .catch((err) => next(err));
 })
-.delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
+.delete( authenticate.verifyUser, (req, res, next) => {
     Messages.findById(req.params.messageId)
     .then((message) => {
         if(message != null){
