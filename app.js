@@ -18,6 +18,7 @@ const connect = mongoose.connect(url);
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var tripsRouter = require('./routes/tripsRouter');
+var messageRouter = require('./routes/messageRouter');
 
 var app = express();
 
@@ -69,6 +70,7 @@ app.use(passport.session());
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/trips', tripsRouter);
+app.use('/messages', messageRouter);
 
 function auth(req,res,next) {
   //	console.log(req.session);

@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 var authenticate = require('../authenticate');
 const multer = require('multer');
 const cors = require('./cors');
-const commentRouter = express.Router();
+const messageRouter = express.Router();
 
 const Trips = require('../models/tripModel');
 const Users = require('../models/user'); 
@@ -16,11 +16,11 @@ messageRouter.route('/:tripId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.corsWithOptions,authenticate.verifyUser, (req,res,next) => {
     Trips.findById(req.params.tripId)
-    .populate('chat')
-    .then((comment) => {
+    .populate('messages')
+    .then((trip) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.json({success:true, comment})
+        res.json({success:true, messages : trip.messages})
     },(err) => next(err))
     .catch((err) => next(err));
 })
@@ -90,7 +90,6 @@ messageRouter.route('/:tripId/:messageId')
 .options(cors.corsWithOptions, (req, res) => { res.sendStatus(200); })
 .get(cors.corsWithOptions,authenticate.verifyUser, (req,res,next) => {
     Messages.findById(req.params.messageId)
-    .populate('author')
     .then((message) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');

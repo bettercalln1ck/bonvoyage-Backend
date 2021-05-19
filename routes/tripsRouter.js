@@ -62,8 +62,21 @@ tripsRouter.route('/test')
 })
 
 
+tripsRouter.route('/search')
+.post(authenticate.verifyUser,async(req, res, next)=> {
+  Trips.find({$text :{$search : req.body.search}},{"_id":1,"tripName":1,"date":1,"start":1,"end":1})
+  .limit(20)
+  .exec((error,data)=>{
+    if(error){
+      next(error);
+    }
+      res.send(data);
+  })
+});
+
+
 tripsRouter.route('/makeTrip')
-.post(async(req, res, next)=> {
+.post(authenticate.verifyUser,async(req, res, next)=> {
     startingTime = req.body.start
     var startDate = moment('01/01/1970 00:00:00', 'DD/MM/YYYY HH:mm:ss')
     var endDate = moment(req.body.date, 'DD/MM/YYYY HH:mm:ss')
@@ -73,6 +86,8 @@ tripsRouter.route('/makeTrip')
     var endTime =moment(req.body.end,'HH:mm:ss')
     req.body.end = endTime.hour()+ endTime.minute()/60;
 
+    req.body.admin = req.user._id;
+    req.body.users = req.user._id;
 
       await Trips.create((req.body))
       .then(async(trip) =>{
@@ -107,7 +122,12 @@ tripsRouter.route('/makeTrip')
                       if(response.data.rows[i].elements[j].duration.value == 0){
                         await columns.push(0);
                       }else{
+                      if(typeof response.data.rows[i].elements[j].duration_in_traffic === "undefined"){
+                          await columns.push(85290);
+                          console.log("hello");
+                      }else{
                         await columns.push(response.data.rows[i].elements[j].duration_in_traffic.value/60/60);
+                        }
                       }
                     }
               //      console.log(columns);
@@ -117,6 +137,7 @@ tripsRouter.route('/makeTrip')
                     console.log(error);
                     next(error);
                   });
+              console.log(rows);
                 await  matrix.push(rows);
                 }
 
@@ -203,12 +224,12 @@ tripsRouter.route('/makeTrip')
             src2 = `https://maps.googleapis.com/maps/api/place/details/json?place_id=`+element+`&fields=rating,user_ratings_total,formatted_address,name&key=${process.env.GoogleKey}`
             console.log(src2)
             await axios.get(src2).then(async (response) => {
-              if(Object.keys(response.data.result.rating).length === 0){
+              if(typeof response.data.result.rating === "undefined"){
                 await placesScore.push(90000);
               }else{
                 await placesScore.push(response.data.result.rating * response.data.result.user_ratings_total)
               }
-                await placesInfo.push([element,response.data.result.name,response.data.result.formatted_address])
+                await placesInfo.push({"placeId":element,"placeName":response.data.result.name,"placeAddress":response.data.result.formatted_address});
             }).catch(error => {
                 console.log(error);
                 return next(err); 
@@ -381,7 +402,7 @@ tripsRouter.route('/makeTrip')
         for( j=0 ; j<finalPaths[i].path.length ;j++){
           
           if(finalPaths[i].path[j]==-1){
-            await path.push(["wait","",""])
+            await path.push({"placeId":"wait","placeName":"null","placeAddress":"null"});
           }else{
             await path.push(placesInfo[finalPaths[i].path[j]])
           }
@@ -391,7 +412,19 @@ tripsRouter.route('/makeTrip')
         })
       }
 
-        res.json({"result" : result,"start":startingTime});
+    //  await Trips.findByIdAndUpdate(trip._id ,
+    //   { $set: { result: result} }, 
+    //   { new: true })
+    //   .then((trip) =>{
+    //     res.json({"result" : result,"start":startingTime,"trip":trip});
+    //   }) 
+    trip.result = result;
+    await trip.save((err,resp)=>{
+      if(err){
+        next(err);
+      }
+      res.json({"result" : result,"start":startingTime});
+    })
 
       }, (err) => next(err))
         .catch((err) => next(err));
