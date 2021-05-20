@@ -17,7 +17,7 @@ messageRouter.route('/:tripId')
 .get(authenticate.verifyUser, async (req,res,next) => {
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
         {
             res.json("Join this trip to view message");
             return;
@@ -26,7 +26,14 @@ messageRouter.route('/:tripId')
     .catch((err) => next(err));
 
     await Trips.findById(req.params.tripId)
-    .populate('messages')
+    .populate({
+        path: 'messages',
+        select:{"message":1,"_id":1},
+    populate:{
+        path:'author',
+        model:'User',
+        select :{"username":1,"_id":1}
+    },})
     .then((trip) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -37,7 +44,7 @@ messageRouter.route('/:tripId')
 .post( authenticate.verifyUser, async (req,res,next) => {
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
         {
             res.json("Join this trip to send message");
             return;
@@ -70,7 +77,7 @@ messageRouter.route('/:tripId')
 })
 .put( authenticate.verifyUser, (req, res, next) => {
     res.statusCode = 403;
-    res.end('PUT operation not supported on /comments/:postId');
+    res.end('PUT operation not supported on /messages/:tripId');
 });
 // .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
 //     Trips.findById(req.params.tripId)
@@ -112,7 +119,7 @@ messageRouter.route('/:tripId/:messageId')
 
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
         {
             res.json("Join this trip to view message");
             return;

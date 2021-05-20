@@ -55,6 +55,10 @@ const tripSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         }],
+        splitWise:[{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'SplitWise'
+        }],
         result:[resultSchema]       
 }, {
     timestamps: true

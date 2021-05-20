@@ -436,7 +436,7 @@ tripsRouter.route('/makeTrip')
 
 tripsRouter.route('/tripInfo/:tripId')
 .get(async (req,res,next) => {
-  Trips.findById(req.params.tripId,{placeId:1,tripName:1,start:1,end:1,data:1})
+  Trips.findById(req.params.tripId,{placeId:1,tripName:1,start:1,end:1,data:1,result:1,users:1})
   .then((trip)=>{
       res.json({sucess:true,tripInfo:trip});
   }, (err) => next(err))

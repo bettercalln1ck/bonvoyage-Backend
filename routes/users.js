@@ -31,6 +31,29 @@ router.route('/')
 	.catch((err) => next(err));
 });
 
+router.route('/userTrips')
+.get(authenticate.verifyUser,(req, res, next)=> {
+  User.findById(req.user._id)
+  .populate("trips","placeId tripName start end date")
+  .then((user) =>{
+    res.statusCode=200;
+    res.setHeader('Content-Type', 'application/json');
+    
+    res.send(user.trips);
+
+//       res.statusCode=200;
+//       res.setHeader('Content-Type', 'application/json');
+//   //    if(user.followers.includes(req.user._id)){
+//         res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname, bio: user.bio});
+//  //     }
+//  //     else{
+//  //       res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname});
+//  //     }
+  },(err) => next(err))
+    .catch((err) =>next(err));
+})
+
+
 router.route('/profile')
 .get(authenticate.verifyUser,(req, res, next)=> {
   User.findById(req.user._id)
@@ -38,7 +61,7 @@ router.route('/profile')
       res.statusCode=200;
       res.setHeader('Content-Type', 'application/json');
   //    if(user.followers.includes(req.user._id)){
-        res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname, bio: user.bio});
+        res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname, bio: user.bio,trips:user.trips});
  //     }
  //     else{
  //       res.json({success: true,userId:user._id,username:user.username,firstname: user.firstname,lastname: user.lastname});
@@ -140,18 +163,18 @@ router.get('/logout',(req,res) =>{
 
 });
 
-router.route('/updateProfile')
-.options((req, res) => { res.sendStatus(200); })
-.put(authenticate.verifyUser, (req, res, next) => {
-  User.findByIdAndUpdate(req.user._id, {
-    $set: req.body
-}, {new: true})
-.then((user) => {
-    res.statusCode = 200;
-    res.setHeader('Content-Type', 'application/json');
-    res.json(user);
-}, (err) => next(err))
-.catch((err) => next(err));
-});
+// router.route('/updateProfile')
+// .options((req, res) => { res.sendStatus(200); })
+// .put(authenticate.verifyUser, (req, res, next) => {
+//   User.findByIdAndUpdate(req.user._id, {
+//     $set: req.body
+// }, {new: true})
+// .then((user) => {
+//     res.statusCode = 200;
+//     res.setHeader('Content-Type', 'application/json');
+//     res.json(user);
+// }, (err) => next(err))
+// .catch((err) => next(err));
+// });
 
 module.exports = router;
