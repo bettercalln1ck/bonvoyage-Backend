@@ -47,6 +47,10 @@ const tripSchema = new Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Message'
         }],
+        splitWise:[{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'SplitWise'
+        }],
         admin: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
@@ -54,10 +58,6 @@ const tripSchema = new Schema({
         users: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
-        }],
-        splitWise:[{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'SplitWise'
         }],
         result:[resultSchema]       
 }, {

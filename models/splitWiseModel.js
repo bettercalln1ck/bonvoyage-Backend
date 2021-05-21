@@ -14,6 +14,6 @@ const splitWiseSchema = new Schema({
     timestamps: true
 });
 
-var SplitWise = mongoose.model('SplitWiseSchema', splitWiseSchema);
+var splitWise = mongoose.model('SplitWise', splitWiseSchema);
 
-module.exports = SplitWise;
+module.exports = splitWise;
