@@ -2,8 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 var authenticate = require('../authenticate');
-const multer = require('multer');
-const cors = require('./cors');
 const messageRouter = express.Router();
 
 const Trips = require('../models/tripModel');
