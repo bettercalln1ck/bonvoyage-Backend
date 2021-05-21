@@ -32,6 +32,7 @@ router.route('/')
 });
 
 router.route('/userTrips')
+.options( (req, res) => { res.sendStatus(200); })
 .get(authenticate.verifyUser,(req, res, next)=> {
   User.findById(req.user._id)
   .populate("trips","placeId tripName start end date")
