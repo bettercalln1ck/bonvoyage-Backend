@@ -15,7 +15,7 @@ messageRouter.route('/:tripId')
 .get(authenticate.verifyUser, async (req,res,next) => {
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) === -1 )
         {
             res.json("Join this trip to view message");
             return;
@@ -42,7 +42,7 @@ messageRouter.route('/:tripId')
 .post( authenticate.verifyUser, async (req,res,next) => {
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) === -1 )
         {
             res.json("Join this trip to send message");
             return;
@@ -117,7 +117,7 @@ messageRouter.route('/:tripId/:messageId')
 
     await Users.findById(req.user._id)
     .then((user)=>{
-        if(typeof user.trips === "undefined" || !user.trips.indexOf(req.params.tripId) )
+        if(typeof user.trips === "undefined" || user.trips.indexOf(req.params.tripId) === -1 )
         {
             res.json("Join this trip to view message");
             return;

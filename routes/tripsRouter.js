@@ -438,6 +438,7 @@ tripsRouter.route('/tripInfo/:tripId')
 .options( (req, res) => { res.sendStatus(200); })
 .get(async (req,res,next) => {
   Trips.findById(req.params.tripId,{placeId:1,tripName:1,start:1,end:1,data:1,result:1,users:1})
+  .populate("users","_id username")
   .then((trip)=>{
     res.statusCode=200;
     res.setHeader('Content-Type', 'application/json');
