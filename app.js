@@ -19,6 +19,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var tripsRouter = require('./routes/tripsRouter');
 var messageRouter = require('./routes/messageRouter');
+var splitWiseRouter = require('./routes/splitWiseRouter');
+const { suppressDeprecationWarnings } = require('moment');
 
 var app = express();
 
@@ -71,6 +73,8 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/trips', tripsRouter);
 app.use('/messages', messageRouter);
+app.use('/splitWise', splitWiseRouter);
+
 
 function auth(req,res,next) {
   //	console.log(req.session);
