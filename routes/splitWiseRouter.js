@@ -59,7 +59,7 @@ splitWiseRouter.route('/calculate/:tripId')
 
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.json({success:true, SplitWise : toPay})
+        res.json({success:true, splitWise : toPay})
     },(err) => next(err))
     .catch((err) => next(err));
 });
