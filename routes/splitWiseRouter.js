@@ -111,7 +111,7 @@ splitWiseRouter.route('/:tripId')
         SplitWise.create(req.body)
         .then(async(splitwise) => {
             await Trips.findByIdAndUpdate(req.params.tripId, {
-                $addToSet: {splitWise: splitwise._id}
+                $push: {splitWise: splitwise._id}
             }, {new:true}, function(err, result){
                 if(err){
                     res.send(err);

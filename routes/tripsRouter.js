@@ -157,19 +157,19 @@ tripsRouter.route('/makeTrip')
                             await openingTime.push([10,22])
                             return ;
                           }
-                          if(!(resp.data.result.opening_hours == null)){
+                          if(!(resp.data.result.opening_hours === null)){
                     //        console.log(resp);
                   //  await console.log(startDate.day());
                               await dataX.push({opening_hours: resp.data.result.opening_hours.periods})
                               var open ;
-                              if(Object.keys(resp.data.result.opening_hours.periods[startDate.day()]).length === 0){
+                              if(typeof resp.data.result.opening_hours.periods[startDate.day()] === "undefined"){
                                 open = 6;
                               }else{
                                 open = resp.data.result.opening_hours.periods[startDate.day()].open.time;
                               open = (open/100 + (open%100)/60)
                               }
                               var close ;
-                              if(Object.keys(resp.data.result.opening_hours.periods[startDate.day()]).length === 0){
+                              if(typeof resp.data.result.opening_hours.periods[startDate.day()] === "undefined"){
                                 close = 6;
                               }else{
                                 close = resp.data.result.opening_hours.periods[startDate.day()].close.time
