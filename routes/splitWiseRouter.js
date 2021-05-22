@@ -81,7 +81,7 @@ splitWiseRouter.route('/:tripId')
     await Trips.findById(req.params.tripId)
     .populate({
         path: 'splitWise',
-        select:{"expended":1,"_id":1},
+        select:{"expended":1,"_id":1,"updatedAt":1},
      populate:{
          path:'author',
          model:'User',
