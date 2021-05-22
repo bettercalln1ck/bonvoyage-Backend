@@ -91,7 +91,7 @@ splitWiseRouter.route('/:tripId')
     .then((trip) => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.json({success:true, SplitWise : trip.splitWise})
+        res.json({success:true, splitWise : trip.splitWise})
     },(err) => next(err))
     .catch((err) => next(err));
 })
