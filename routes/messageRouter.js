@@ -26,7 +26,7 @@ messageRouter.route('/:tripId')
     await Trips.findById(req.params.tripId)
     .populate({
         path: 'messages',
-        select:{"message":1,"_id":1},
+          select:{"message":1,"_id":1,"updatedAt":1},
     populate:{
         path:'author',
         model:'User',
