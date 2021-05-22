@@ -91,14 +91,14 @@ tripsRouter.route('/makeTrip')
     req.body.users = [req.user._id];
 
 
-
+    
       await Trips.create((req.body))
       .then(async(trip) =>{
        // res.json(trip);
       //  return;
         origins = ""
 
-              User.findByIdAndUpdate(req.user._id,{
+              await User.findByIdAndUpdate(req.user._id,{
               $push : {trips : trip._id}});
 
               //create origins url that contain placeId's
@@ -118,7 +118,7 @@ tripsRouter.route('/makeTrip')
                 src = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=`+origins+`&destinations=`+origins+`&departure_time=`+time.toString()+`&key=${process.env.GoogleKey}`;
                 
                 time+=3600
-                console.log(src)
+                console.log(src);
                 rows = []
                 await axios.get(src)
               .then(async (response) => {
@@ -145,7 +145,7 @@ tripsRouter.route('/makeTrip')
                     console.log(error);
                     next(error);
                   });
-              console.log(rows);
+              //console.log(rows);
                 await  matrix.push(rows);
                 }
 
@@ -277,6 +277,8 @@ tripsRouter.route('/makeTrip')
     ];
     const waitTime = 1;
     let finalPaths = [];
+
+    console.time("algorithmTime");
     while (queue.length !== 0) {
       // console.log("\nLoop Entered\n");
       var current = queue[queue.length - 1];
@@ -403,6 +405,7 @@ tripsRouter.route('/makeTrip')
 
     }
 
+    console.timeEnd("algorithmTime");
    // res.json({"result" : finalPaths,"start":startingTime});
 
     await finalPaths.sort((a,b)=> {
@@ -411,7 +414,7 @@ tripsRouter.route('/makeTrip')
 
     //   res.json(finalPaths);
 
-      console.log(finalPaths)
+      //console.log(finalPaths)
       var result =[];
 
       for( i=0;i<5;i++){
@@ -419,13 +422,15 @@ tripsRouter.route('/makeTrip')
         for( j=0 ; j<finalPaths[i].path.length ;j++){
           
           if(finalPaths[i].path[j]==-1){
-            await path.push({"placeId":"wait","placeName":"null","placeAddress":"null"});
+            await path.push({"placeId":"wait","placeName":"null","placeAddress":"null","timeAfterVisit":finalPaths[i].timeAfterVisit[j]});
           }else{
-            await path.push(placesInfo[finalPaths[i].path[j]])
+            var tempPlacesInfo = placesInfo[finalPaths[i].path[j]];
+            tempPlacesInfo["timeAfterVisit"] = finalPaths[i].timeAfterVisit[j];
+            await path.push(placesInfo[finalPaths[i].path[j]]);
           }
         }
       await  result.push({
-          "path":path,"timeAfterVisit":finalPaths[i].timeAfterVisit,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
+          "path":path,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
         })
       }
 
