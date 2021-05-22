@@ -112,11 +112,7 @@ splitWiseRouter.route('/:tripId')
         .then(async(splitwise) => {
             await Trips.findByIdAndUpdate(req.params.tripId, {
                 $push: {splitWise: splitwise._id}
-            }, {new:true}, function(err, result){
-                if(err){
-                    res.send(err);
-                }
-            });
+            }).then((resp) => console.log(resp));
             res.statusCode = 200;
             res.setHeader('Content-Type', 'application/json');
             res.json({success:true,splitwise});

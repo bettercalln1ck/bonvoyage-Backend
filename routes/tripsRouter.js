@@ -90,11 +90,16 @@ tripsRouter.route('/makeTrip')
     req.body.admin = req.user._id;
     req.body.users = [req.user._id];
 
+
+
       await Trips.create((req.body))
       .then(async(trip) =>{
        // res.json(trip);
       //  return;
         origins = ""
+
+              User.findByIdAndUpdate(req.user._id,{
+              $push : {trips : trip._id}});
 
               //create origins url that contain placeId's
               await Promise.all(
@@ -265,6 +270,7 @@ tripsRouter.route('/makeTrip')
     var queue = [
       {
         path: ["0"],
+        timeAfterVisit: [0],
         timeTaken: 0.0,
         totalScore: 0.0,
       },
@@ -288,6 +294,7 @@ tripsRouter.route('/makeTrip')
       if (timeLeft <= 0) {
         finalPaths.push({
           path: current.path,
+          timeAfterVisit : current.timeAfterVisit,
           score: current.totalScore,
           timeTaken: current.timeTaken,
         });
@@ -361,9 +368,12 @@ tripsRouter.route('/makeTrip')
           // } else {
           // 	newScore = newScore + inputData.score[x];
           // }
+          var newTimeAfterVisit = [...current.timeAfterVisit];
+          newTimeAfterVisit.push(newTimeTaken);
           flag = 0;
           queue.push({
             path: newPath,
+            timeAfterVisit : newTimeAfterVisit,
             timeTaken: newTimeTaken,
             totalScore: newScore,
           });
@@ -373,9 +383,12 @@ tripsRouter.route('/makeTrip')
       var newPath2 = [...current.path];
       newPath2.push("-1");
       var newTimeTaken2 = current.timeTaken + waitTime;
+      var newTimeAfterVisit2 = [...current.timeAfterVisit];
+      newTimeAfterVisit2.push(newTimeTaken2);
       if (newTimeTaken2 + inputData.start >= inputData.end) {
         finalPaths.push({
           path: current.path,
+          timeAfterVisit : current.timeAfterVisit,
           score: current.totalScore,
           timeTaken: current.timeTaken,
         });
@@ -383,6 +396,7 @@ tripsRouter.route('/makeTrip')
       }
           await queue.push({
             path: newPath2,
+            timeAfterVisit : newTimeAfterVisit2,
             timeTaken: newTimeTaken2,
             totalScore: current.totalScore,
           });
@@ -411,16 +425,10 @@ tripsRouter.route('/makeTrip')
           }
         }
       await  result.push({
-          "path":path,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
+          "path":path,"timeAfterVisit":finalPaths[i].timeAfterVisit,"score":finalPaths[i].score,"timeTaken":finalPaths[i].timeTaken
         })
       }
 
-    //  await Trips.findByIdAndUpdate(trip._id ,
-    //   { $set: { result: result} }, 
-    //   { new: true })
-    //   .then((trip) =>{
-    //     res.json({"result" : result,"start":startingTime,"trip":trip});
-    //   }) 
     trip.result = result;
     await trip.save((err,resp)=>{
       if(err){
