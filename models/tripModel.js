@@ -10,6 +10,9 @@ const pathSchema = new Schema({
     },
     placeAddress:{
         type:String,
+    },
+    timeAfterVisit:{
+        type:mongoose.Decimal128,
     }
 }, { _id : false });
 

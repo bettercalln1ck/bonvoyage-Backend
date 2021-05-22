@@ -53,7 +53,7 @@ splitWiseRouter.route('/calculate/:tripId')
             toPay.push({
                 "_id":keys,
                 "username":values.name,
-                "toPay": averageExpense-values.expense,
+                "toPay": (averageExpense-values.expense).toFixed(2),
             })
         })
 
